@@ -31,10 +31,8 @@ android {
 		checkReleaseBuilds false
 	}
 
-	java {
-		javadoc {
-			failOnError false
-		}
+	tasks.withType(Javadoc).configureEach {
+		failOnError false
 	}
 }
 
