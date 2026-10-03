@@ -65,8 +65,6 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
-
       - name: Ensure Android SDK 35
         run: |
           yes 2>/dev/null | sdkmanager --licenses > /dev/null 2>&1 || true
@@ -84,15 +82,14 @@ jobs:
 
       - name: Publish log on failure
         if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p logs
-          tail -c 200000 /tmp/vianbt.log > logs/vianbt.log
-          git config user.name "ci-bot"
-          git config user.email "ci-bot@users.noreply.github.com"
-          git checkout -B ci-logs
-          git add logs/vianbt.log
-          git commit -m "ci log: vianbt" || exit 0
-          git push -f origin ci-logs
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms" 2>/dev/null || echo "no platforms dir"
+          jq -n --arg t "CI log: vianbt ${{ github.run_number }}" --arg b "$(tail -c 50000 /tmp/vianbt.log)" '{title:$t,body:$b,labels:["ci-log"]}' > /tmp/issue.json
+          curl -sf -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues -d @/tmp/issue.json > /dev/null || true
 
       - uses: actions/upload-artifact@v4
         with:
@@ -112,8 +109,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-
-      - uses: android-actions/setup-android@v3
 
       - name: Ensure Android SDK 35
         run: |
@@ -142,15 +137,14 @@ jobs:
 
       - name: Publish log on failure
         if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p logs
-          tail -c 200000 /tmp/misode-android.log > logs/misode-android.log
-          git config user.name "ci-bot"
-          git config user.email "ci-bot@users.noreply.github.com"
-          git checkout -B ci-logs
-          git add logs/misode-android.log
-          git commit -m "ci log: misode-android" || exit 0
-          git push -f origin ci-logs
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms" 2>/dev/null || echo "no platforms dir"
+          jq -n --arg t "CI log: misode-android ${{ github.run_number }}" --arg b "$(tail -c 50000 /tmp/misode-android.log)" '{title:$t,body:$b,labels:["ci-log"]}' > /tmp/issue.json
+          curl -sf -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues -d @/tmp/issue.json > /dev/null || true
 
       - uses: actions/upload-artifact@v4
         with:
