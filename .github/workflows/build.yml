@@ -98,6 +98,36 @@ jobs:
           curl -sf -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/issues -d @/tmp/issue.json > /dev/null || true
 
+      - name: Smoke test (JVM unit tests)
+        run: |
+          set -o pipefail
+          gradle :vianbt:test --stacktrace 2>&1 | tee /tmp/vianbt-test.log
+
+      - name: Verify AAR is dependency free
+        run: |
+          set -e
+          AAR=$(find vianbt/build/outputs -name "*.aar" | head -1)
+          echo "AAR: $AAR"
+          rm -rf /tmp/aar && mkdir -p /tmp/aar && cd /tmp/aar && unzip -qo "$OLDPWD/$AAR"
+          ls -la /tmp/aar
+          mkdir -p /tmp/classes && cd /tmp/classes && unzip -qo /tmp/aar/classes.jar
+          echo "class files: $(find /tmp/classes -name '*.class' | wc -l)"
+          if grep -rl "unimi" /tmp/classes; then
+            echo "::error::fastutil still referenced in the compiled output"
+            exit 1
+          fi
+          echo "OK: no fastutil reference in the compiled classes"
+          echo "AAR size: $(stat -c%s "$OLDPWD/$AAR") bytes"
+
+      - name: Publish test report on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          jq -n --arg t "CI log: vianbt test ${{ github.run_number }}" --arg b "$(tail -c 50000 /tmp/vianbt-test.log)" '{title:$t,body:$b,labels:["ci-log"]}' > /tmp/issue.json
+          curl -sf -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues -d @/tmp/issue.json > /dev/null || true
+
       - name: Collect AAR
         run: |
           mkdir -p out-vianbt
@@ -173,11 +203,59 @@ jobs:
           path: out-misode-android/
           if-no-files-found: error
 
+  # ------------------------------------------------------------- browser smoke
+  smoke-web:
+    name: smoke (mobile bundle in Chromium)
+    runs-on: ubuntu-latest
+    needs: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: misode-web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: misode-web
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: misode-web-assets
+          path: misode-web/dist-mobile
+
+      - name: Unpack bundle
+        working-directory: misode-web
+        run: |
+          cd dist-mobile
+          unzip -qo misode-web-assets.zip
+          rm -f misode-web-assets.zip
+          ls -la
+          du -sh .
+
+      - name: Install Playwright chromium
+        working-directory: misode-web
+        run: npx playwright install chromium --with-deps
+
+      - name: Run smoke test
+        working-directory: misode-web
+        run: npm run smoke
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-screenshots
+          path: misode-web/dist-mobile/*.png
+          if-no-files-found: ignore
+
   # ------------------------------------------------------------------- release
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [web, vianbt, misode-android]
+    needs: [web, vianbt, misode-android, smoke-web]
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
@@ -192,4 +270,5 @@ jobs:
           files: |
             artifacts/**/*.zip
             artifacts/**/*.aar
+            artifacts/**/*.png
           generate_release_notes: true

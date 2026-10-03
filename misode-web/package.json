@@ -11,7 +11,8 @@
 		"preview": "vite preview",
 		"lint": "eslint . --ext .ts,.tsx",
 		"build:mobile": "vite build --config vite.config.mobile.js",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"smoke": "node scripts/smoke.mjs"
 	},
 	"keywords": [],
 	"author": "Misode",
@@ -60,6 +61,7 @@
 		"@typescript-eslint/parser": "^5.28.0",
 		"autoprefixer": "^10.4.16",
 		"eslint": "^8.17.0",
+		"playwright": "^1.48.2",
 		"postcss": "^8.5.3",
 		"preact": "^10.8.0",
 		"preact-router": "^3.2.1",

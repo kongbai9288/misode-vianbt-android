@@ -31,6 +31,15 @@ android {
 		checkReleaseBuilds false
 	}
 
+	testOptions {
+		unitTests.all {
+			testLogging {
+				events 'passed', 'failed', 'skipped'
+				showStandardStreams = true
+			}
+		}
+	}
+
 	tasks.withType(Javadoc).configureEach {
 		failOnError false
 	}
@@ -39,4 +48,7 @@ android {
 dependencies {
 	// Compile-time only annotations (@Nullable). Not shipped, not part of the dex.
 	compileOnly 'org.jetbrains:annotations:24.1.0'
+
+	// JVM unit tests only; nothing ships with the AAR.
+	testImplementation 'junit:junit:4.13.2'
 }
