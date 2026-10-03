@@ -169,7 +169,7 @@ public class NbtSmokeTest {
 		// tag reader wraps it in an IOException.
 		boolean rejected = false;
 		try {
-			NBTIO.reader(CompoundTag.class).tagLimiter(TagLimiter.create(1 << 20, 2))
+			NBTIO.reader(CompoundTag.class).named().tagLimiter(TagLimiter.create(1 << 20, 2))
 				.read(new ByteArrayInputStream(bytes));
 		} catch (IOException | IllegalArgumentException expected) {
 			rejected = true;
@@ -179,7 +179,7 @@ public class NbtSmokeTest {
 		// A tiny byte budget is rejected too.
 		boolean sizeRejected = false;
 		try {
-			NBTIO.reader(CompoundTag.class).tagLimiter(TagLimiter.create(8, 64))
+			NBTIO.reader(CompoundTag.class).named().tagLimiter(TagLimiter.create(8, 64))
 				.read(new ByteArrayInputStream(bytes));
 		} catch (IOException | IllegalArgumentException expected) {
 			sizeRejected = true;
@@ -188,7 +188,8 @@ public class NbtSmokeTest {
 
 		// Sanity check: with a generous limiter the same payload reads fine.
 		try {
-			CompoundTag ok = NBTIO.reader(CompoundTag.class).tagLimiter(TagLimiter.create(1 << 20, 64))
+			CompoundTag ok = NBTIO.reader(CompoundTag.class).named()
+				.tagLimiter(TagLimiter.create(1 << 20, 64))
 				.read(new ByteArrayInputStream(bytes));
 			assertNotNull(ok);
 		} catch (IOException e) {
