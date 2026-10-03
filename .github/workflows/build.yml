@@ -91,10 +91,16 @@ jobs:
           curl -sf -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/issues -d @/tmp/issue.json > /dev/null || true
 
+      - name: Collect AAR
+        run: |
+          mkdir -p out-vianbt
+          find vianbt/build/outputs -name "*.aar" -exec cp {} out-vianbt/ \;
+          ls -la out-vianbt
+
       - uses: actions/upload-artifact@v4
         with:
           name: vianbt-aar
-          path: vianbt/build/outputs/aar/*.aar
+          path: out-vianbt/
           if-no-files-found: error
 
   # ----------------------------------------------------------- WebView wrapper
@@ -146,10 +152,16 @@ jobs:
           curl -sf -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/issues -d @/tmp/issue.json > /dev/null || true
 
+      - name: Collect AAR
+        run: |
+          mkdir -p out-misode-android
+          find misode-android/build/outputs -name "*.aar" -exec cp {} out-misode-android/ \;
+          ls -la out-misode-android
+
       - uses: actions/upload-artifact@v4
         with:
           name: misode-android-aar
-          path: misode-android/build/outputs/aar/*.aar
+          path: out-misode-android/
           if-no-files-found: error
 
   # ------------------------------------------------------------------- release
