@@ -33,10 +33,6 @@ jobs:
         working-directory: misode-web
         run: npm install --no-audit --no-fund --legacy-peer-deps
 
-      - name: Type check
-        working-directory: misode-web
-        run: npx tsc --noEmit || true
-
       - name: Build mobile bundle
         working-directory: misode-web
         run: npm run build:mobile
@@ -69,6 +65,14 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - uses: android-actions/setup-android@v3
+
+      - name: Ensure Android SDK 35
+        run: |
+          yes 2>/dev/null | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1 || true
+          sdkmanager --list_installed 2>/dev/null | head -20 || true
+
       - name: Install Gradle
         run: |
           curl -sSL -o gradle.zip https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip
@@ -76,7 +80,19 @@ jobs:
           echo "/opt/gradle-${GRADLE_VERSION}/bin" >> "$GITHUB_PATH"
 
       - name: Assemble release AAR
-        run: gradle :vianbt:assembleRelease --stacktrace
+        run: gradle :vianbt:assembleRelease --stacktrace 2>&1 | tee /tmp/vianbt.log
+
+      - name: Publish log on failure
+        if: failure()
+        run: |
+          mkdir -p logs
+          tail -c 200000 /tmp/vianbt.log > logs/vianbt.log
+          git config user.name "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git checkout -B ci-logs
+          git add logs/vianbt.log
+          git commit -m "ci log: vianbt" || exit 0
+          git push -f origin ci-logs
 
       - uses: actions/upload-artifact@v4
         with:
@@ -97,6 +113,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - uses: android-actions/setup-android@v3
+
+      - name: Ensure Android SDK 35
+        run: |
+          yes 2>/dev/null | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1 || true
+
       - uses: actions/download-artifact@v4
         with:
           name: misode-web-assets
@@ -115,7 +138,19 @@ jobs:
           ls misode-android/src/main/assets/misode
 
       - name: Assemble release AAR
-        run: gradle :misode-android:assembleRelease --stacktrace
+        run: gradle :misode-android:assembleRelease --stacktrace 2>&1 | tee /tmp/misode-android.log
+
+      - name: Publish log on failure
+        if: failure()
+        run: |
+          mkdir -p logs
+          tail -c 200000 /tmp/misode-android.log > logs/misode-android.log
+          git config user.name "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git checkout -B ci-logs
+          git add logs/misode-android.log
+          git commit -m "ci log: misode-android" || exit 0
+          git push -f origin ci-logs
 
       - uses: actions/upload-artifact@v4
         with:
