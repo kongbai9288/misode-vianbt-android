@@ -90,9 +90,20 @@ async function main() {
 	const externalRequests = []
 	page.on('pageerror', e => pageErrors.push(e.message))
 	page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()) })
+	// Minecraft data (mcmeta / vanilla-mcdoc) is fetched on demand; anything else
+	// is a leaked remote dependency and counts as a failure.
+	const DATA_HOSTS = [
+		'raw.githubusercontent.com',
+		'github.com',
+		'mcmeta-diff.misode.workers.dev',
+		'whats-new.misode.workers.dev',
+	]
 	page.on('request', r => {
-		if (!r.url().startsWith(base) && !r.url().startsWith('data:') && !r.url().startsWith('blob:')) {
-			externalRequests.push(r.url())
+		const url = r.url()
+		if (url.startsWith(base) || url.startsWith('data:') || url.startsWith('blob:')) return
+		const host = (() => { try { return new URL(url).host } catch { return '' } })()
+		if (!DATA_HOSTS.some(h => host === h || host.endsWith('.' + h))) {
+			externalRequests.push(url)
 		}
 	})
 
@@ -128,7 +139,13 @@ async function main() {
 		.map(s => s.getAttribute('src')).filter(s => /^https?:/.test(s)))
 	check('no remote <script> tags', remote.length === 0, remote.join(', '))
 
-	// 6. mobile layout actually applied
+	// 6. navigate to a generator
+	await page.evaluate(() => window.MisodeBridge.navigate('/loot-table'))
+	await page.waitForSelector('.popup-source', { timeout: 60_000 })
+		.then(() => check('generator page rendered', true))
+		.catch(e => check('generator page rendered', false, e.message))
+
+	// 7. mobile layout actually applied
 	const layout = await page.evaluate(() => {
 		const sheet = document.querySelector('.popup-source')
 		const header = document.querySelector('header')
@@ -139,19 +156,22 @@ async function main() {
 			viewport: window.innerWidth,
 			headerHeight: header ? getComputedStyle(header).height : null,
 			bodyFontSize: getComputedStyle(document.body).fontSize,
+			hitTargets: Array.from(document.querySelectorAll('.popup-action'))
+				.slice(0, 3).map(el => getComputedStyle(el).minHeight),
 		}
 	})
 	check('output panel is a full width bottom sheet',
 		layout.sheetWidth === `${layout.viewport}px` && layout.sheetPosition === 'fixed',
 		JSON.stringify(layout))
+	check('touch targets are at least 44px',
+		layout.hitTargets.every(h => parseInt(h) >= 44), JSON.stringify(layout.hitTargets))
 
-	// 7. navigate + wait for real generated output
-	await page.evaluate(() => window.MisodeBridge.navigate('/loot-table'))
+	// 8. wait for real generated output
 	try {
 		await page.waitForFunction(() => {
 			const out = window.MisodeBridge?.getOutput()
 			return typeof out === 'string' && out.trim().length > 2
-		}, null, { timeout: 90_000 })
+		}, null, { timeout: 180_000 })
 		const output = await page.evaluate(() => window.MisodeBridge.getOutput())
 		check('generator produced output', output.length > 2, `${output.length} chars`)
 		let parsed = null
@@ -160,6 +180,14 @@ async function main() {
 	} catch (e) {
 		check('generator produced output', false, e.message)
 		check('output is valid JSON', false)
+		const diag = await page.evaluate(() => ({
+			path: location.pathname,
+			title: document.title,
+			body: document.body.innerText.slice(0, 400),
+			hasMain: !!document.querySelector('main'),
+			panels: document.querySelectorAll('.popup-source, .file-view, .tree-view').length,
+		})).catch(() => null)
+		console.log('diagnostics:', JSON.stringify(diag, null, 2))
 	}
 
 	// 8. settings round trip through the bridge

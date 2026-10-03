@@ -10,6 +10,21 @@
 import { installBridge } from './bridge.js'
 import './mobile.css'
 
+declare global {
+	interface Window {
+		dataLayer?: unknown[]
+		gtag?: (...args: unknown[]) => void
+	}
+}
+
+// The Google Analytics snippet is gone in the embedded build, but misode's
+// Analytics module still calls gtag() on every interaction. Provide a no-op so
+// an undefined function never throws inside a React effect.
+if (typeof window.gtag !== 'function') {
+	window.dataLayer = window.dataLayer ?? []
+	window.gtag = (...args: unknown[]) => { window.dataLayer?.push(args) }
+}
+
 const bridge = installBridge()
 
 function currentPath() {

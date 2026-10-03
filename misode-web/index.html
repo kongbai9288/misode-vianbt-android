@@ -16,6 +16,9 @@
 	<meta name="color-scheme" content="dark light">
 	<meta name="mobile-web-app-capable" content="yes">
 	<meta name="theme-color" content="#1b1b1b">
+	<!-- Embedded build: only Minecraft data hosts may be contacted.
+	     Decorative remote images (e.g. supporter avatars) are blocked. -->
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline' blob:; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob: https://raw.githubusercontent.com https://github.com https://mcmeta-diff.misode.workers.dev https://whats-new.misode.workers.dev; worker-src 'self' blob:;">
 	<title>Data Pack Generators - Minecraft 1.21, 26.1, 26.2</title>
 	<link rel="icon" href="/src/favicon-32.png" sizes="32x32">
 		<script>
