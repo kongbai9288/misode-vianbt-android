@@ -21,8 +21,6 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
@@ -114,15 +112,14 @@ public class NbtSmokeTest {
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try (GZIPOutputStream gzip = new GZIPOutputStream(out)) {
-			NBTIO.writer().named().write(new DataOutputStream(gzip), root);
+			NBTIO.writer().named().write(gzip, root);
 		}
 		byte[] gzipped = out.toByteArray();
 		assertTrue("should actually be compressed", gzipped.length > 10);
 
 		CompoundTag read;
 		try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(gzipped))) {
-			read = NBTIO.reader(CompoundTag.class).named()
-				.read(new DataInputStream(gzip));
+			read = NBTIO.reader(CompoundTag.class).named().read(gzip);
 		}
 		assertEquals("minecraft:stone", read.getString("id"));
 		assertEquals(64, read.getInt("Count"));
@@ -167,8 +164,8 @@ public class NbtSmokeTest {
 			throw new AssertionError(e);
 		}
 		try {
-			NBTIO.reader(CompoundTag.class).tagLimiter(TagLimiter.create(1 << 20, 8)).read(
-				new DataInputStream(new ByteArrayInputStream(bytes)));
+			NBTIO.reader(CompoundTag.class).tagLimiter(TagLimiter.create(1 << 20, 8))
+				.read(new ByteArrayInputStream(bytes));
 			fail("expected the limiter to reject a deeply nested tag");
 		} catch (IOException expected) {
 			// expected
@@ -210,13 +207,13 @@ public class NbtSmokeTest {
 
 	private static byte[] write(CompoundTag tag) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		NBTIO.writer().named().write(new DataOutputStream(out), tag);
+		NBTIO.writer().named().write(out, tag);
 		return out.toByteArray();
 	}
 
 	private static CompoundTag read(byte[] bytes) throws IOException {
 		Tag tag = NBTIO.reader().tagLimiter(LIMITER).named()
-			.read(new DataInputStream(new ByteArrayInputStream(bytes)));
+			.read(new ByteArrayInputStream(bytes));
 		return (CompoundTag) tag;
 	}
 }
