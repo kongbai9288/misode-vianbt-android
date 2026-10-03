@@ -25,6 +25,21 @@ if (typeof window.gtag !== 'function') {
 	window.gtag = (...args: unknown[]) => { window.dataLayer?.push(args) }
 }
 
+// Mobile: default to the lightweight textarea instead of the Ace editor.
+//
+// misode gates its output pipeline on `braceLoaded` whenever syntax
+// highlighting is on, so a failure to load Ace (a ~1 MB desktop editor that
+// does not belong on a phone anyway) silently blocks every generator from ever
+// producing output. Defaulting to off keeps the app fast and always functional.
+// Users can still opt in through MisodeBridge.setHighlighting(true).
+try {
+	if (localStorage.getItem('output_highlighting') === null) {
+		localStorage.setItem('output_highlighting', 'false')
+	}
+} catch {
+	// Private mode / disabled storage: the in-memory default still applies.
+}
+
 const bridge = installBridge()
 
 function currentPath() {

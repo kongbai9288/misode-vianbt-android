@@ -151,8 +151,8 @@ public class NbtSmokeTest {
 	public void tagLimiterStillProtects() {
 		CompoundTag root = new CompoundTag();
 		CompoundTag current = root;
-		// 40 levels deep, well past the 32 level limit.
-		for (int i = 0; i < 40; i++) {
+		// 20 levels deep, well past the 2 level limit used below.
+		for (int i = 0; i < 20; i++) {
 			CompoundTag next = new CompoundTag();
 			current.put("n" + i, next);
 			current = next;
@@ -163,12 +163,36 @@ public class NbtSmokeTest {
 		} catch (IOException e) {
 			throw new AssertionError(e);
 		}
+
+		// Deep nesting is rejected. Depending on where the limit trips the
+		// limiter either surfaces it directly (IllegalArgumentException) or the
+		// tag reader wraps it in an IOException.
+		boolean rejected = false;
 		try {
-			NBTIO.reader(CompoundTag.class).tagLimiter(TagLimiter.create(1 << 20, 8))
+			NBTIO.reader(CompoundTag.class).tagLimiter(TagLimiter.create(1 << 20, 2))
 				.read(new ByteArrayInputStream(bytes));
-			fail("expected the limiter to reject a deeply nested tag");
-		} catch (IOException expected) {
-			// expected
+		} catch (IOException | IllegalArgumentException expected) {
+			rejected = true;
+		}
+		assertTrue("the limiter must reject nesting deeper than its max level", rejected);
+
+		// A tiny byte budget is rejected too.
+		boolean sizeRejected = false;
+		try {
+			NBTIO.reader(CompoundTag.class).tagLimiter(TagLimiter.create(8, 64))
+				.read(new ByteArrayInputStream(bytes));
+		} catch (IOException | IllegalArgumentException expected) {
+			sizeRejected = true;
+		}
+		assertTrue("the limiter must reject data over its byte budget", sizeRejected);
+
+		// Sanity check: with a generous limiter the same payload reads fine.
+		try {
+			CompoundTag ok = NBTIO.reader(CompoundTag.class).tagLimiter(TagLimiter.create(1 << 20, 64))
+				.read(new ByteArrayInputStream(bytes));
+			assertNotNull(ok);
+		} catch (IOException e) {
+			throw new AssertionError("a generous limiter must accept the payload", e);
 		}
 	}
 
