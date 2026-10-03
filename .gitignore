@@ -1,0 +1,14 @@
+# Gradle
+.gradle/
+build/
+*/build/
+local.properties
+
+# Node
+node_modules/
+dist/
+dist-mobile/
+
+# IDE
+.idea/
+*.iml

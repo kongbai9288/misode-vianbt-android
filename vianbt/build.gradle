@@ -1,0 +1,44 @@
+plugins {
+	id 'com.android.library'
+}
+
+android {
+	namespace 'com.viaversion.nbt'
+	compileSdk 35
+
+	defaultConfig {
+		minSdk 21
+		// The library is pure Java: no resources, no manifest placeholders.
+		consumerProguardFiles 'consumer-rules.pro'
+	}
+
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_1_8
+		targetCompatibility JavaVersion.VERSION_1_8
+	}
+
+	buildTypes {
+		release {
+			minifyEnabled false
+			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+		}
+	}
+
+	// java.nio.file based helpers (Path overloads) require API 26; the rest of the
+	// library works down to API 21. Do not fail the release build on that lint check.
+	lint {
+		abortOnError false
+		checkReleaseBuilds false
+	}
+
+	java {
+		javadoc {
+			failOnError false
+		}
+	}
+}
+
+dependencies {
+	// Compile-time only annotations (@Nullable). Not shipped, not part of the dex.
+	compileOnly 'org.jetbrains:annotations:24.1.0'
+}
