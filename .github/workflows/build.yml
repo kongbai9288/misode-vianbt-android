@@ -78,7 +78,9 @@ jobs:
           echo "/opt/gradle-${GRADLE_VERSION}/bin" >> "$GITHUB_PATH"
 
       - name: Assemble release AAR
-        run: gradle :vianbt:assembleRelease --stacktrace 2>&1 | tee /tmp/vianbt.log
+        run: |
+          set -o pipefail
+          gradle :vianbt:assembleRelease --stacktrace 2>&1 | tee /tmp/vianbt.log
 
       - name: Publish log on failure
         if: failure()
@@ -139,7 +141,9 @@ jobs:
           ls misode-android/src/main/assets/misode
 
       - name: Assemble release AAR
-        run: gradle :misode-android:assembleRelease --stacktrace 2>&1 | tee /tmp/misode-android.log
+        run: |
+          set -o pipefail
+          gradle :misode-android:assembleRelease --stacktrace 2>&1 | tee /tmp/misode-android.log
 
       - name: Publish log on failure
         if: failure()
