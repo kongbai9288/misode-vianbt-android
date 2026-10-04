@@ -48,8 +48,8 @@ public class McaSmokeTest {
 		assertEquals(1, MinecraftCoordinates.chunkToRegion(35));
 		assertEquals(3, MinecraftCoordinates.chunkIndexInRegion(35));
 		int[] back = new int[]{
-			MinecraftCoordinates.regionToChunk(1, 1, 3, 3).getFirst(),
-			MinecraftCoordinates.regionToChunk(1, 1, 3, 3).getSecond(),
+			MinecraftCoordinates.regionToChunk(1, 1, 3, 3).getFirst().intValue(),
+			MinecraftCoordinates.regionToChunk(1, 1, 3, 3).getSecond().intValue(),
 		};
 		assertEquals(35, back[0]);
 		assertEquals(35, back[1]);
@@ -62,10 +62,10 @@ public class McaSmokeTest {
 		assertEquals(4, MinecraftCoordinates.chunkIndexToOffset(1, 0));
 		assertEquals(128, MinecraftCoordinates.chunkIndexToOffset(0, 1));
 
-		assertEquals(1, MinecraftCoordinates.chunkOffsetToIndex(4).getFirst());
-		assertEquals(0, MinecraftCoordinates.chunkOffsetToIndex(4).getSecond());
-		assertEquals(0, MinecraftCoordinates.chunkOffsetToIndex(128).getFirst());
-		assertEquals(1, MinecraftCoordinates.chunkOffsetToIndex(128).getSecond());
+		assertEquals(1, MinecraftCoordinates.chunkOffsetToIndex(4).getFirst().intValue());
+		assertEquals(0, MinecraftCoordinates.chunkOffsetToIndex(4).getSecond().intValue());
+		assertEquals(0, MinecraftCoordinates.chunkOffsetToIndex(128).getFirst().intValue());
+		assertEquals(1, MinecraftCoordinates.chunkOffsetToIndex(128).getSecond().intValue());
 	}
 
 	@Test
@@ -93,8 +93,8 @@ public class McaSmokeTest {
 		}
 		// yaw = 0 faces south, which is +Y on screen (downwards).
 		Pair<Float, Float> south = MinecraftCoordinates.yawToScreenDirection(0f);
-		assertEquals(0f, south.getFirst(), 0.001f);
-		assertEquals(1f, south.getSecond(), 0.001f);
+		assertEquals(0f, south.getFirst().floatValue(), 0.001f);
+		assertEquals(1f, south.getSecond().floatValue(), 0.001f);
 	}
 
 	@Test
