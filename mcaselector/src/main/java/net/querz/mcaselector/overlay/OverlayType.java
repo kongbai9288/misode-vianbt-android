@@ -12,8 +12,7 @@ public enum OverlayType {
 	TILE_ENTITY_AMOUNT("#TileEntities", TileEntityAmountOverlay::new),
 	DATA_VERSION("DataVersion", DataVersionOverlay::new),
 	AVERAGE_HEIGHT("AverageHeight", AverageHeightOverlay::new),
-	BLOCK_AMOUNT("#Blocks", BlockAmountOverlay::new),
-	SCRIPT("Script", ScriptOverlay::new);
+	BLOCK_AMOUNT("#Blocks", BlockAmountOverlay::new);
 
 	private final String name;
 	private final Supplier<Overlay> supplier;
