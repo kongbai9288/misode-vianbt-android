@@ -87,151 +87,6 @@ public class ColorConfig {
 		return blockColor.color;
 	}
 
-		MinecraftVersionFile versionFile = MinecraftVersionFile.load(versionJson);
-
-		// download server jar
-		if (!Files.exists(serverJar)) {
-			Download.to(versionFile.getDownloads().server().url(), serverJar);
-		}
-
-		// download client jar
-		if (!Files.exists(clientJar)) {
-			Download.to(versionFile.getDownloads().client().url(), clientJar);
-		}
-
-		// generate reports
-		if (!Files.exists(generated)) {
-			Report.generate(serverJar, generated);
-		}
-
-		// load blocks.json
-		Path blocksJson = generated.resolve("reports/blocks.json");
-		Blocks blocks = Blocks.load(blocksJson);
-		BlockStates blockStates = blocks.generateBlockStates();
-		this.states = blockStates;
-
-		Map<String, String> waterloggedTrue = new HashMap<>();
-		waterloggedTrue.put("waterlogged", "true");
-		Map<String, String> waterloggedFalse = new HashMap<>();
-		waterloggedFalse.put("waterlogged", "false");
-
-		ColorMapping mapping = new ColorMapping();
-		BiomeColors tints = new BiomeColors();
-		try (FileSystem fs = FileSystems.newFileSystem(clientJar, (ClassLoader) null)) {
-			Path assetBase = fs.getPath("assets/minecraft");
-			Path assetBlockstates = assetBase.resolve("blockstates");
-			Path assetModels = assetBase.resolve("models");
-			Path assetTextures = assetBase.resolve("textures");
-
-			for (Map.Entry<String, Blocks.Block> states : blocks.states.entrySet()) {
-				String blockName = states.getKey();
-
-				// air doesn't have a model
-				if (colorProperties.isAir(blockName)) {
-					continue;
-				}
-
-				// apply static color if configured
-				if (colorProperties.staticColor.containsKey(blockName)) {
-					mapping.setBlockColor(blockName, new SingleStateColors(new BlockColor(colorProperties.staticColor.get(blockName), colorProperties.get(blockName))));
-					continue;
-				}
-
-				// load blockstates/<blockName>.json
-				Path assetBlockState = assetBlockstates.resolve(trimNS(blockName) + ".json");
-				JsonObject jsonBlockstate = readJSONAsset(assetBlockState);
-
-				// check all variants
-				JsonObject variants;
-				JsonArray multipart;
-				if ((variants = jsonBlockstate.getAsJsonObject("variants")) != null) {
-					// check if this block can be waterlogged
-					boolean canBeWaterlogged = states.getValue().properties().containsKey("waterlogged");
-
-					for (Map.Entry<String, JsonElement> variant : variants.entrySet()) {
-						// get model of variant
-						String model;
-						if (variant.getValue().isJsonArray()) {
-							model = trimNS(variant.getValue().getAsJsonArray().get(0).getAsJsonObject().get("model").getAsString());
-						} else {
-							model = trimNS(variant.getValue().getAsJsonObject().get("model").getAsString());
-						}
-
-						Map<String, String> textureMapping = resolveTextureMapping(model, assetModels);
-						String topTexture = trimNS(getTopTextureName(textureMapping));
-						Path assetTexture = assetTextures.resolve(topTexture + ".png");
-						int color = averageColor(assetTexture);
-						BitSet blockStateBits = blockStates.getState(variant.getKey());
-						if (canBeWaterlogged && blockStateBits != null) {
-							BitSet blockStateBitsWT = blockStates.getState(waterloggedTrue);
-							blockStateBitsWT.or(blockStateBits);
-							mapping.addBlockColor(blockName, blockStateBitsWT, new BlockColor(color, colorProperties.get(blockName)));
-							BitSet blockStateBitsWF = blockStates.getState(waterloggedFalse);
-							blockStateBitsWF.or(blockStateBits);
-							mapping.addBlockColor(blockName, blockStateBitsWF, new BlockColor(color, colorProperties.get(blockName)));
-						} else {
-							mapping.addBlockColor(blockName, blockStateBits, new BlockColor(color, colorProperties.get(blockName)));
-						}
-					}
-				} else if ((multipart = jsonBlockstate.getAsJsonArray("multipart")) != null) {
-					JsonObject part = multipart.get(0).getAsJsonObject();
-					String model;
-					if (part.get("apply").isJsonObject()) {
-						model = trimNS(part.getAsJsonObject("apply").get("model").getAsString());
-					} else {
-						model = trimNS(part.getAsJsonArray("apply").get(0).getAsJsonObject().get("model").getAsString());
-					}
-
-					Map<String, String> textureMapping = resolveTextureMapping(model, assetModels);
-					String topTexture = trimNS(getTopTextureName(textureMapping));
-					Path assetTexture = assetTextures.resolve(topTexture + ".png");
-					int color = averageColor(assetTexture);
-					mapping.addBlockColor(blockName, null, new BlockColor(color, colorProperties.get(blockName)));
-				}
-
-				// apply static tint if configured
-				if (colorProperties.staticTint.containsKey(blockName)) {
-					BlockColor rawColor = mapping.getBlockColor(blockName, null);
-					BlockColor tinted = new BlockColor(ColorMapping.applyTint(rawColor.color, colorProperties.staticTint.get(blockName)), rawColor.properties);
-					mapping.setBlockColor(blockName, new SingleStateColors(tinted));
-				}
-			}
-
-			// extract biome tints
-			Path biomes = generated.resolve("data/minecraft/worldgen/biome");
-			Path assetGrass = assetBase.resolve("textures/colormap/grass.png");
-			Path assetFoliage = assetBase.resolve("textures/colormap/foliage.png");
-			Path assetDryFoliage = assetBase.resolve("textures/colormap/dry_foliage.png");
-			BufferedImage grassTints = ImageIO.read(Files.newInputStream(assetGrass));
-			BufferedImage foliageTints = ImageIO.read(Files.newInputStream(assetFoliage));
-			BufferedImage dryFoliageTints = ImageIO.read(Files.newInputStream(assetDryFoliage));
-
-			try (DirectoryStream<Path> ds = Files.newDirectoryStream(biomes)) {
-				for (Path b : ds) {
-					if (!Files.isRegularFile(b)) {
-						continue;
-					}
-					Biome biome = Biome.load(b);
-					int grassTint = Objects.requireNonNullElseGet(
-							biome.effects.grassTint(),
-							() -> getColorMapping(biome.temperature, biome.downfall, grassTints));
-					int foliageTint = Objects.requireNonNullElseGet(
-							biome.effects.foliageTint(),
-							() -> getColorMapping(biome.temperature, biome.downfall, foliageTints));
-					int dryFoliageTint = Objects.requireNonNullElseGet(
-							biome.effects.dryFoliageTint(),
-							() -> getColorMapping(biome.temperature, biome.downfall, dryFoliageTints));
-					String fileName = b.getFileName().toString();
-					tints.addTints(
-							"minecraft:" + fileName.substring(0, fileName.length() - 5),
-							new BiomeColors.BiomeTints(grassTint, foliageTint, biome.effects.waterTint(), dryFoliageTint));
-				}
-			}
-		}
-		mapping.compress();
-		this.colors = mapping;
-		this.tints = tints;
-	}
 
 	private String trimNS(String s) {
 		return s.substring(s.indexOf(':') + 1);
@@ -292,9 +147,18 @@ public class ColorConfig {
 		return t;
 	}
 
-		return 0xffffff;
-	}
 
+
+	public record ColorProperties(
+			@SerializedName("air") Set<String> air,
+			@SerializedName("transparent") Set<String> transparent,
+			@SerializedName("grass_tint") Set<String> grassTint,
+			@SerializedName("foliage_tint") Set<String> foliageTint,
+			@SerializedName("dry_foliage_tint") Set<String> dryFoliageTint,
+			@SerializedName("water") Set<String> water,
+			@SerializedName("foliage") Set<String> foliage,
+			@SerializedName("static_tint") Map<String, Integer> staticTint,
+			@SerializedName("static_color") Map<String, Integer> staticColor) {
 
 		private static final Gson GSON = new GsonBuilder()
 				.setPrettyPrinting()

@@ -30,7 +30,7 @@ public enum FilterType {
 	PROTO_ENTITY_AMOUNT("#ProtoEntities", ProtoEntityAmountFilter::new, Format.NUMBER),
 	TILE_ENTITY_AMOUNT("#TileEntities", TileEntityAmountFilter::new, Format.NUMBER),
 	CIRCLE("Circle", CircleFilter::new, Format.TEXT),
-	BORDER("Border", BorderFilter::new, Format.NUMBER),
+	BORDER("Border", BorderFilter::new, Format.NUMBER);
 
 	private final String string;
 	private final Supplier<? extends Filter<?>> creator;
