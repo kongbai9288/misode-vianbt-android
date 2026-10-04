@@ -252,12 +252,18 @@ public class McaSmokeTest {
 
 	@Test
 	public void noDesktopDependenciesOnTheClasspath() {
+		// Only libraries that are NOT part of the JDK can be asserted here.
+		// java.awt ships with every desktop JVM, so a classpath check would
+		// always pass/fail for the wrong reason; the CI job verifies AWT and
+		// JavaFX by scanning the compiled .aar instead.
 		String[] banned = {
 			"it.unimi.dsi.fastutil.ints.IntArrayList",
 			"it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap",
+			"it.unimi.dsi.fastutil.longs.LongOpenHashSet",
+			"it.unimi.dsi.fastutil.shorts.ShortPredicate",
 			"javafx.scene.image.Image",
-			"java.awt.image.BufferedImage",
 			"org.apache.logging.log4j.LogManager",
+			"org.apache.logging.log4j.Logger",
 		};
 		for (String name : banned) {
 			try {
