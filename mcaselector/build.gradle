@@ -41,5 +41,8 @@ dependencies {
 	// Kotlin stdlib for the android.* helper layer.
 	implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.0.21'
 
+	// LZ4: modern .mca chunks are LZ4Block compressed. Pure Java, no JNI.
+	implementation 'org.lz4:lz4-java:1.8.0'
+
 	testImplementation 'junit:junit:4.13.2'
 }

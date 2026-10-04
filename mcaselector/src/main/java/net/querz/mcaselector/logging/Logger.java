@@ -7,7 +7,7 @@ import android.util.Log;
  *
  * MCA Selector logs through log4j everywhere; on Android that is dead weight
  * (and pulls in a GraalVM annotation processor), so every call is forwarded to
- * {@link android.util.Log}. Tagged with "MCA" so it can be filtered in logcat.
+ * {@link android.util.Log}. Tagged "MCA" so it can be filtered in logcat.
  */
 public final class Logger {
 

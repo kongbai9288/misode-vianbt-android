@@ -3,9 +3,7 @@ package net.querz.mcaselector.logging;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Stand-in for {@code org.apache.logging.log4j.LogManager}.
- */
+/** Stand-in for {@code org.apache.logging.log4j.LogManager}. */
 public final class LogManager {
 
 	private static final Map<String, Logger> LOGGERS = new ConcurrentHashMap<>();

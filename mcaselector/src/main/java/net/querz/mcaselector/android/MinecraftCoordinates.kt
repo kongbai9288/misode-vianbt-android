@@ -5,9 +5,9 @@ package net.querz.mcaselector.android
  *
  * # 为什么需要这个
  *
- * MCA Selector 的核心是把 Minecraft 存档画成一张俯视地图。
- * 两套坐标系的轴向定义完全不同，直接照搬坐标会得到：
- * 地图南北颠倒、玩家朝向箭头偏 90°、区块选区整体偏移。
+ * MCA Selector 的核心是把 Minecraft 存档渲染成一张俯视地图。
+ * 两套坐标系的轴向定义完全不同，直接照搬坐标会导致：
+ * 地图南北颠倒、朝向箭头偏 90°、区块选区整体偏移。
  *
  * # 轴向对照
  *
@@ -26,15 +26,16 @@ package net.querz.mcaselector.android
  * screenY = Z      （南 = 下；北在上、南在下，与直觉一致）
  * ```
  *
- * **注意**：Minecraft 的 Y 是 3D 高度，俯视图里不参与平面定位。
- * 它只在高度图（heightmap）着色、或做伪 3D 时才有意义。
- * 常见 bug 是把 MC 的 Y 当成屏幕 Y 用，结果整张图沿垂直轴镜像。
+ * **注意**：Minecraft 的 Y 是 3D 高度，俯视图里不参与平面定位，
+ * 只在高度图着色或伪 3D 时才有意义。
+ * 常见错误是把 MC 的 Y 当成屏幕 Y 用，结果整张图沿垂直轴镜像。
  *
  * # 关于 Mojang 的坐标语义差异
  *
- * 历史上 Minecraft 在不同版本/不同维度下，同一份 NBT 字段的坐标语义发生过变化
- * （例如区块内相对坐标与绝对坐标的混用、结构方块旋转时的坐标变换顺序差异）。
- * 跨版本读取存档时不要假定坐标语义一致，应以该版本的 VersionHandler 为准。
+ * 历史上 Minecraft 在不同版本 / 不同维度下，同一份 NBT 字段的坐标语义
+ * 发生过变化（例如区块内相对坐标与绝对坐标的混用、结构方块旋转时的
+ * 坐标变换顺序差异）。跨版本读取存档时不要假定坐标语义一致，
+ * 应以该版本的 VersionHandler 为准。
  * 本文件只负责「已知语义后的纯数学换算」，不做版本判定。
  */
 object MinecraftCoordinates {
@@ -58,7 +59,7 @@ object MinecraftCoordinates {
 	 * MC yaw：0=南(+Z)，90=西(-X)，180=北(-Z)，270=东(+X)。
 	 * Canvas：0=指向右(+X)，正角度顺时针。
 	 *
-	 * 俯视图下南=屏幕下方(+Y)，即相对「右」顺时针 90°，故偏移量为 +90：
+	 * 俯视图下南 = 屏幕下方(+Y)，相对「右」顺时针 90°，故偏移量为 +90：
 	 *
 	 * | yaw | 朝向 | Canvas 角 |
 	 * |---|---|---|
@@ -73,8 +74,7 @@ object MinecraftCoordinates {
 	fun canvasAngleToYaw(angle: Float): Float = normalizeDegrees(angle - 90f)
 
 	/**
-	 * yaw 单位向量在屏幕上的方向。
-	 * 返回 (dx, dy)，dy 为正表示朝屏幕下方。
+	 * yaw 单位向量在屏幕上的方向，返回 (dx, dy)，dy 为正表示朝屏幕下方。
 	 */
 	fun yawToScreenDirection(yaw: Float): Pair<Float, Float> {
 		val rad = Math.toRadians(yaw.toDouble())
@@ -124,10 +124,10 @@ object MinecraftCoordinates {
 
 	// ------------------------------------------------------- 区块 / 区域换算
 
-	/** 方块坐标 → 该方块所属区块坐标。 */
+	/** 方块坐标 → 所属区块坐标。 */
 	fun blockToChunk(block: Int): Int = block shr 4
 
-	/** 区块坐标 → 它所在区域文件的坐标。 */
+	/** 区块坐标 → 所在区域文件坐标。 */
 	fun chunkToRegion(chunk: Int): Int = chunk shr 5
 
 	/** 区块在所属区域内的下标，范围 0..31。 */
@@ -136,10 +136,7 @@ object MinecraftCoordinates {
 	/** 区块内局部方块下标，范围 0..15。 */
 	fun blockIndexInChunk(block: Int): Int = block and (CHUNK_SIZE - 1)
 
-	/**
-	 * 把 (区域坐标, 区域内下标) 还原成绝对区块坐标。
-	 * 与 [chunkToRegion] / [chunkIndexInRegion] 互逆。
-	 */
+	/** (区域坐标, 区域内下标) → 绝对区块坐标。 */
 	fun regionToChunk(regionX: Int, regionZ: Int, indexX: Int, indexZ: Int): Pair<Int, Int> =
 		(regionX shl 5) + indexX to (regionZ shl 5) + indexZ
 

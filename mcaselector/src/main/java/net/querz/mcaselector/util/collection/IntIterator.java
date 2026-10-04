@@ -4,9 +4,8 @@ package net.querz.mcaselector.util.collection;
  * Dependency-free replacement for {@code it.unimi.dsi.fastutil.ints.IntIterator}.
  *
  * Deliberately does not extend {@link java.util.PrimitiveIterator.OfInt}: that
- * interface forces {@code forEachRemaining(java.util.function.IntConsumer)},
- * which clashes with the fastutil flavour of IntConsumer used across the code
- * base. Everything that is actually needed is provided here with defaults.
+ * forces {@code forEachRemaining(java.util.function.IntConsumer)}, which clashes
+ * with the fastutil flavour of IntConsumer used across the code base.
  */
 public interface IntIterator {
 
