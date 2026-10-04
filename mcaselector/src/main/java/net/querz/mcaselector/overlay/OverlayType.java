@@ -13,7 +13,6 @@ public enum OverlayType {
 	DATA_VERSION("DataVersion", DataVersionOverlay::new),
 	AVERAGE_HEIGHT("AverageHeight", AverageHeightOverlay::new),
 	BLOCK_AMOUNT("#Blocks", BlockAmountOverlay::new),
-	PATH("Path", PathOverlay::new),
 	SCRIPT("Script", ScriptOverlay::new);
 
 	private final String name;
