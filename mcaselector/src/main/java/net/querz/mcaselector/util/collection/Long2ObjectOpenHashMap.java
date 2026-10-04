@@ -17,7 +17,7 @@ import java.util.Set;
  * little allocation per lookup but keeps fastutil (several hundred KB) out of
  * the APK.
  */
-public class Long2ObjectOpenHashMap<V> implements Long2ObjectMap<V>, Serializable {
+public class Long2ObjectOpenHashMap<V> implements Long2ObjectMap<V>, Iterable<Long2ObjectMap.Entry<V>>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -79,6 +79,21 @@ public class Long2ObjectOpenHashMap<V> implements Long2ObjectMap<V>, Serializabl
 		LongOpenHashSet set = new LongOpenHashSet(map.size());
 		for (Long key : map.keySet()) set.add(key);
 		return set;
+	}
+
+	/** Shallow copy; Selection#subtract relies on it. */
+	@SuppressWarnings("unchecked")
+	@Override
+	public Long2ObjectOpenHashMap<V> clone() {
+		Long2ObjectOpenHashMap<V> copy = new Long2ObjectOpenHashMap<>(map.size());
+		copy.map.putAll(map);
+		return copy;
+	}
+
+	/** Lets {@code for (Entry<V> e : map)} work. */
+	@Override
+	public java.util.Iterator<Entry<V>> iterator() {
+		return long2ObjectEntrySet().iterator();
 	}
 
 	@Override public String toString() { return map.toString(); }

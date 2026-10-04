@@ -68,14 +68,17 @@ object MinecraftCoordinates {
 	 * | 180 | 北  | 270° |
 	 * | 270 | 东  | 360° → 0° |
 	 */
+	@JvmStatic
 	fun yawToCanvasAngle(yaw: Float): Float = normalizeDegrees(yaw + 90f)
 
 	/** [yawToCanvasAngle] 的逆运算。 */
+	@JvmStatic
 	fun canvasAngleToYaw(angle: Float): Float = normalizeDegrees(angle - 90f)
 
 	/**
 	 * yaw 单位向量在屏幕上的方向，返回 (dx, dy)，dy 为正表示朝屏幕下方。
 	 */
+	@JvmStatic
 	fun yawToScreenDirection(yaw: Float): Pair<Float, Float> {
 		val rad = Math.toRadians(yaw.toDouble())
 		// MC: yaw=0 指向 +Z(南)。x = -sin(yaw), z = cos(yaw)
@@ -86,6 +89,7 @@ object MinecraftCoordinates {
 	}
 
 	/** 把角度规范到 [0, 360)。 */
+	@JvmStatic
 	fun normalizeDegrees(deg: Float): Float {
 		val d = deg % 360f
 		return if (d < 0f) d + 360f else d
@@ -102,6 +106,7 @@ object MinecraftCoordinates {
 	 * @param originZ 视口左上角的方块 Z
 	 * @param scale 每方块占多少像素
 	 */
+	@JvmStatic
 	fun blockToPixel(
 		blockX: Int,
 		blockZ: Int,
@@ -112,6 +117,7 @@ object MinecraftCoordinates {
 		(blockX - originX) * scale to (blockZ - originZ) * scale
 
 	/** 屏幕像素 → 方块坐标，[blockToPixel] 的逆运算。 */
+	@JvmStatic
 	fun pixelToBlock(
 		pixelX: Float,
 		pixelY: Float,
@@ -125,18 +131,23 @@ object MinecraftCoordinates {
 	// ------------------------------------------------------- 区块 / 区域换算
 
 	/** 方块坐标 → 所属区块坐标。 */
+	@JvmStatic
 	fun blockToChunk(block: Int): Int = block shr 4
 
 	/** 区块坐标 → 所在区域文件坐标。 */
+	@JvmStatic
 	fun chunkToRegion(chunk: Int): Int = chunk shr 5
 
 	/** 区块在所属区域内的下标，范围 0..31。 */
+	@JvmStatic
 	fun chunkIndexInRegion(chunk: Int): Int = chunk and (REGION_SIZE - 1)
 
 	/** 区块内局部方块下标，范围 0..15。 */
+	@JvmStatic
 	fun blockIndexInChunk(block: Int): Int = block and (CHUNK_SIZE - 1)
 
 	/** (区域坐标, 区域内下标) → 绝对区块坐标。 */
+	@JvmStatic
 	fun regionToChunk(regionX: Int, regionZ: Int, indexX: Int, indexZ: Int): Pair<Int, Int> =
 		(regionX shl 5) + indexX to (regionZ shl 5) + indexZ
 
@@ -144,18 +155,21 @@ object MinecraftCoordinates {
 	 * 区域文件内偏移量 → 区块下标对。
 	 * .mca 头部每个区块占 4 字节，偏移量 = (indexZ * 32 + indexX) * 4。
 	 */
+	@JvmStatic
 	fun chunkOffsetToIndex(offset: Int): Pair<Int, Int> {
 		val i = offset / 4
 		return (i % REGION_SIZE) to (i / REGION_SIZE)
 	}
 
 	/** 区块下标对 → 区域文件内偏移量。 */
+	@JvmStatic
 	fun chunkIndexToOffset(indexX: Int, indexZ: Int): Int =
 		(indexZ * REGION_SIZE + indexX) * 4
 
 	// ------------------------------------------------------------------ 距离
 
 	/** 平面距离（忽略高度 Y），单位：方块。 */
+	@JvmStatic
 	fun planarDistance(x1: Int, z1: Int, x2: Int, z2: Int): Double {
 		val dx = (x2 - x1).toDouble()
 		val dz = (z2 - z1).toDouble()
@@ -163,6 +177,7 @@ object MinecraftCoordinates {
 	}
 
 	/** 3D 距离（含高度 Y），单位：方块。 */
+	@JvmStatic
 	fun distance3D(x1: Int, y1: Int, z1: Int, x2: Int, y2: Int, z2: Int): Double {
 		val dx = (x2 - x1).toDouble()
 		val dy = (y2 - y1).toDouble()

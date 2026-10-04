@@ -1,17 +1,23 @@
 package net.querz.mcaselector.logging;
 
-import android.util.Log;
-
 /**
- * Tiny stand-in for {@code org.apache.logging.log4j.Logger}.
+ * Dependency-free stand-in for {@code org.apache.logging.log4j.Logger}.
  *
  * MCA Selector logs through log4j everywhere; on Android that is dead weight
- * (and pulls in a GraalVM annotation processor), so every call is forwarded to
- * {@link android.util.Log}. Tagged "MCA" so it can be filtered in logcat.
+ * (it also drags in a GraalVM annotation processor), so calls are forwarded to
+ * {@code android.util.Log} when running on a device.
+ *
+ * The sink is resolved reflectively so that plain JVM unit tests do not load
+ * the android.jar stub, which throws "not mocked" the moment it is touched.
  */
 public final class Logger {
 
+	/** Log levels, mirroring android.util.Log. */
+	static final int V = 2, D = 3, I = 4, W = 5, E = 6, A = 7;
+
 	private static final String TAG = "MCA";
+
+	private static Sink sink;
 
 	private final String name;
 
@@ -23,47 +29,108 @@ public final class Logger {
 		return name;
 	}
 
-	private String prefix() {
-		return name + ": ";
+	/** Sink used when not running on Android (unit tests, desktop tooling). */
+	interface Sink {
+		void log(int level, String tag, String message, Throwable t);
 	}
 
-	public void trace(String message) {
-		Log.v(TAG, prefix() + message);
+	static synchronized Sink sink() {
+		if (sink == null) {
+			sink = resolveSink();
+		}
+		return sink;
 	}
 
-	public void debug(String message) {
-		Log.d(TAG, prefix() + message);
+	private static Sink resolveSink() {
+		try {
+			Class<?> androidLog = Class.forName("android.util.Log");
+			// Only use it if it is a real implementation, not the stub jar.
+			androidLog.getMethod("isLoggable", String.class, int.class);
+			return new AndroidSink(androidLog);
+		} catch (Throwable notOnAndroid) {
+			return new StdOutSink();
+		}
 	}
 
-	public void info(String message) {
-		Log.i(TAG, prefix() + message);
+	static final class AndroidSink implements Sink {
+
+		private final Class<?> logClass;
+
+		AndroidSink(Class<?> logClass) {
+			this.logClass = logClass;
+		}
+
+		@Override
+		public void log(int level, String tag, String message, Throwable t) {
+			try {
+				String m = message;
+				if (t != null) {
+					m = message + "\n" + android.util.Log.getStackTraceString(t);
+				}
+				android.util.Log.println(level, tag, m);
+			} catch (Throwable ignored) {
+				// Never let logging break the caller.
+			}
+		}
 	}
 
-	public void warn(String message) {
-		Log.w(TAG, prefix() + message);
+	static final class StdOutSink implements Sink {
+
+		@Override
+		public void log(int level, String tag, String message, Throwable t) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(levelChar(level)).append('/').append(tag).append(": ").append(message);
+			if (t != null) {
+				sb.append('\n').append(t);
+			}
+			System.out.println(sb);
+		}
+
+		private static char levelChar(int level) {
+			switch (level) {
+				case V: return 'V';
+				case D: return 'D';
+				case I: return 'I';
+				case W: return 'W';
+				case E: return 'E';
+				default: return 'A';
+			}
+		}
 	}
 
-	public void error(String message) {
-		Log.e(TAG, prefix() + message);
+	private void log(int level, String message, Throwable t) {
+		sink().log(level, TAG, name + ": " + message, t);
 	}
 
-	public void error(String message, Throwable t) {
-		Log.e(TAG, prefix() + message, t);
+	private static String fmt(String message, Object... args) {
+		if (args == null || args.length == 0) {
+			return message;
+		}
+		try {
+			return String.format(message, args);
+		} catch (Exception e) {
+			return message;
+		}
 	}
 
-	public void fatal(String message) {
-		Log.wtf(TAG, prefix() + message);
-	}
+	public void trace(String message) { log(V, message, null); }
+	public void trace(String message, Object... args) { log(V, fmt(message, args), null); }
+	public void debug(String message) { log(D, message, null); }
+	public void debug(String message, Object... args) { log(D, fmt(message, args), null); }
+	public void info(String message) { log(I, message, null); }
+	public void info(String message, Object... args) { log(I, fmt(message, args), null); }
+	public void warn(String message) { log(W, message, null); }
+	public void warn(String message, Object... args) { log(W, fmt(message, args), null); }
+	public void warn(String message, Throwable t) { log(W, message, t); }
+	public void error(String message) { log(E, message, null); }
+	public void error(String message, Object... args) { log(E, fmt(message, args), null); }
+	public void error(String message, Throwable t) { log(E, message, t); }
+	public void error(Throwable t) { log(E, String.valueOf(t.getMessage()), t); }
+	public void fatal(String message) { log(A, message, null); }
+	public void fatal(String message, Object... args) { log(A, fmt(message, args), null); }
+	public void fatal(String message, Throwable t) { log(A, message, t); }
+	public void fatal(String message, String s, Throwable t) { log(A, message + " " + s, t); }
 
-	public void fatal(String message, Throwable t) {
-		Log.wtf(TAG, prefix() + message, t);
-	}
-
-	public boolean isDebugEnabled() {
-		return Log.isLoggable(TAG, Log.DEBUG);
-	}
-
-	public boolean isTraceEnabled() {
-		return Log.isLoggable(TAG, Log.VERBOSE);
-	}
+	public boolean isDebugEnabled() { return true; }
+	public boolean isTraceEnabled() { return true; }
 }

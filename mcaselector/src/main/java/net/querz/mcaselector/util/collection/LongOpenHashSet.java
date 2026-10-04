@@ -38,6 +38,19 @@ public class LongOpenHashSet implements LongSet, Serializable {
 	@Override public boolean remove(long key) { return set.remove(key); }
 	@Override public void clear() { set.clear(); }
 
+	/** Union with another long set: {@code allRegions.addAll(allPoi)}. */
+	public boolean addAll(LongSet other) {
+		boolean changed = false;
+		for (java.util.PrimitiveIterator.OfLong it = other.iterator(); it.hasNext();) {
+			changed |= set.add(it.nextLong());
+		}
+		return changed;
+	}
+
+	public boolean addAll(java.util.Collection<? extends Long> other) {
+		return set.addAll(other);
+	}
+
 	@Override
 	public PrimitiveIterator.OfLong iterator() {
 		Iterator<Long> it = set.iterator();

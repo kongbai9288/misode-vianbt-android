@@ -1,21 +1,17 @@
 package net.querz.mcaselector.util.collection;
 
+import java.util.PrimitiveIterator;
+
 /**
  * Dependency-free replacement for {@code it.unimi.dsi.fastutil.ints.IntIterator}.
  *
- * Deliberately does not extend {@link java.util.PrimitiveIterator.OfInt}: that
- * forces {@code forEachRemaining(java.util.function.IntConsumer)}, which clashes
- * with the fastutil flavour of IntConsumer used across the code base.
+ * Extends {@link PrimitiveIterator.OfInt} so the {@code for (int i : chunkSet)}
+ * loops used by the selection code keep compiling through auto-unboxing.
+ * {@code forEachRemaining} is overloaded for the fastutil style IntConsumer.
  */
-public interface IntIterator {
-
-	boolean hasNext();
+public interface IntIterator extends PrimitiveIterator.OfInt {
 
 	int nextInt();
-
-	default Integer next() {
-		return nextInt();
-	}
 
 	default int skip(int n) {
 		int remaining = n;

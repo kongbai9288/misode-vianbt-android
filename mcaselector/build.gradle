@@ -28,6 +28,15 @@ android {
 		}
 	}
 
+	testOptions {
+		unitTests.all {
+			testLogging {
+				events 'passed', 'failed', 'skipped'
+				showStandardStreams = true
+			}
+		}
+	}
+
 	lint {
 		abortOnError false
 		checkReleaseBuilds false
@@ -45,4 +54,5 @@ dependencies {
 	implementation 'org.lz4:lz4-java:1.8.0'
 
 	testImplementation 'junit:junit:4.13.2'
+	testImplementation 'org.jetbrains.kotlin:kotlin-stdlib:2.0.21'
 }
