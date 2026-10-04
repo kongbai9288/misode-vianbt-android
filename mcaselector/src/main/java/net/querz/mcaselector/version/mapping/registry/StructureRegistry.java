@@ -36,10 +36,21 @@ public final class StructureRegistry {
 		init();
 	}
 
+	/**
+	 * Called from a static initialiser, so it cannot propagate a checked
+	 * exception. A missing or malformed resource degrades to an empty registry
+	 * (filters then simply accept every structure name) instead of making the
+	 * whole class fail to load.
+	 */
 	public static void init() {
 		valid.clear();
 		alts.clear();
-		load("mapping/registry/structures.json");
+		try {
+			load("mapping/registry/structures.json");
+		} catch (java.io.IOException e) {
+			net.querz.mcaselector.logging.LogManager.getLogger(StructureRegistry.class)
+				.warn("structure registry unavailable: " + e.getMessage());
+		}
 	}
 
 	private static void load(String resource) throws java.io.IOException {
