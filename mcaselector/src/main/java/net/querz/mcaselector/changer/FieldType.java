@@ -24,9 +24,7 @@ public enum FieldType {
 	FORCE_BLEND("ForceBlend", ForceBlendField::new, false, false),
 	REMOVE_LIGHTING_INFO("RemoveLightingInfo", RemoveLightingInfoField::new, false, false),
 	LIGHT_POPULATED("LightPopulated", LightPopulatedField::new, false, false),
-	CUSTOM("Custom", CustomField::new, false, false),
 	STRUCTURE_REFERENCE("FixStructureReferences", ReferenceField::new, true, false),
-	SCRIPT("Script", ScriptField::new, true, false);
 
 	private final String name;
 	private final Supplier<? extends Field<?>> constructor;

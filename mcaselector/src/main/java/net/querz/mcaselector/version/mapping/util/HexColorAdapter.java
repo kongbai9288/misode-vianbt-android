@@ -16,10 +16,10 @@ public class HexColorAdapter extends TypeAdapter<Integer> {
 	@Override
 	public Integer read(JsonReader in) throws IOException {
 		switch (in.peek()) {
-			case JsonToken.NUMBER -> {
+			case NUMBER -> {
 				return in.nextInt();
 			}
-			case JsonToken.STRING -> {
+			case STRING -> {
 				String s = in.nextString();
 				if (s.startsWith("#")) {
 					return Integer.parseInt(s.substring(1), 16);

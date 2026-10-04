@@ -125,6 +125,7 @@ public final class Logger {
 	public void error(String message) { log(E, message, null); }
 	public void error(String message, Object... args) { log(E, fmt(message, args), null); }
 	public void error(String message, Throwable t) { log(E, message, t); }
+	public void warn(Throwable t) { log(W, String.valueOf(t.getMessage()), t); }
 	public void error(Throwable t) { log(E, String.valueOf(t.getMessage()), t); }
 	public void fatal(String message) { log(A, message, null); }
 	public void fatal(String message, Object... args) { log(A, fmt(message, args), null); }

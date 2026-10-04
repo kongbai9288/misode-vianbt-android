@@ -53,6 +53,11 @@ dependencies {
 	// LZ4: modern .mca chunks are LZ4Block compressed. Pure Java, no JNI.
 	implementation 'org.lz4:lz4-java:1.8.0'
 
+	// Version implementations are discovered through @MCVersionImplementation.
+	// classindex builds that index at compile time; pure Java, works on Android.
+	implementation 'org.atteo.classindex:classindex:3.13'
+	annotationProcessor 'org.atteo.classindex:classindex:3.13'
+
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation 'org.jetbrains.kotlin:kotlin-stdlib:2.0.21'
 }

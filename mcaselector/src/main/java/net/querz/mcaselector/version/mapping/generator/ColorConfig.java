@@ -87,16 +87,6 @@ public class ColorConfig {
 		return blockColor.color;
 	}
 
-	public void generate(MinecraftVersion version, Path tmp) throws IOException, InterruptedException {
-		Path versionJson = tmp.resolve("version.json");
-		Path clientJar = tmp.resolve("client.jar");
-		Path serverJar = tmp.resolve("server.jar");
-		Path generated = tmp.resolve("generated");
-
-		// download version.json
-		if (!Files.exists(versionJson)) {
-			MinecraftVersionFile.download(version, versionJson);
-		}
 		MinecraftVersionFile versionFile = MinecraftVersionFile.load(versionJson);
 
 		// download server jar
@@ -127,7 +117,7 @@ public class ColorConfig {
 
 		ColorMapping mapping = new ColorMapping();
 		BiomeColors tints = new BiomeColors();
-		try (FileSystem fs = FileSystems.newFileSystem(clientJar)) {
+		try (FileSystem fs = FileSystems.newFileSystem(clientJar, (ClassLoader) null)) {
 			Path assetBase = fs.getPath("assets/minecraft");
 			Path assetBlockstates = assetBase.resolve("blockstates");
 			Path assetModels = assetBase.resolve("models");
@@ -302,53 +292,9 @@ public class ColorConfig {
 		return t;
 	}
 
-	private int averageColor(Path img) {
-		// we use javafx Image instead of BufferedImage because BufferedImage#getRGB()
-		// returns wrong color values depending on the color space for some reason.
-		try (InputStream inputStream = Files.newInputStream(img)) {
-			Image image = new Image(inputStream);
-			PixelReader pr = image.getPixelReader();
-			long r = 0, g = 0, b = 0;
-			int c = 0;
-			for (int x = 0; x < image.getWidth(); x++) {
-				for (int y = 0; y < image.getHeight(); y++) {
-					int p = pr.getArgb(x, y);
-					if (p >> 24 != 0) {
-						r += p >> 16 & 0xFF;
-						g += p >> 8 & 0xFF;
-						b += p & 0xFF;
-						c++;
-					}
-				}
-			}
-			int ir = (int) (r / c);
-			int ig = (int) (g / c);
-			int ib = (int) (b / c);
-			return (ir << 16) | (ig << 8) | ib;
-		} catch (IOException e) {
-			// ignore
-		}
 		return 0xffffff;
 	}
 
-	private int getColorMapping(double temperature, double downfall, BufferedImage map) {
-		double adjTemperature = Math.max(0.0, Math.min(1.0, temperature));
-		double adjDownfall = Math.max(0.0, Math.min(1.0, downfall)) * adjTemperature;
-		int pixelX = (int) (255 - adjTemperature * 255);
-		int pixelY = (int) (255 - adjDownfall * 255);
-		return map.getRGB(pixelX, pixelY) & 0xFFFFFF;
-	}
-
-	public record ColorProperties(
-			@SerializedName("air") Set<String> air,
-			@SerializedName("transparent") Set<String> transparent,
-			@SerializedName("grass_tint") Set<String> grassTint,
-			@SerializedName("foliage_tint") Set<String> foliageTint,
-			@SerializedName("dry_foliage_tint") Set<String> dryFoliageTint,
-			@SerializedName("water") Set<String> water,
-			@SerializedName("foliage") Set<String> foliage,
-			@SerializedName("static_tint") Map<String, Integer> staticTint,
-			@SerializedName("static_color") Map<String, Integer> staticColor) {
 
 		private static final Gson GSON = new GsonBuilder()
 				.setPrettyPrinting()
