@@ -61,7 +61,7 @@ public class HeightmapConfig {
 
 	public void save(Path path) throws IOException {
 		String json = GSON.toJson(this);
-		Files.writeString(path, json);
+		Files.write(path, json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 	}
 
 	public void generate(MinecraftVersion version, Path tmp) throws IOException, InterruptedException {

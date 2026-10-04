@@ -89,7 +89,7 @@ public final class DebugWorld {
 				eula = Files.readString(eulaTxt);
 			}
 			eula = eula.replace("eula=false", "eula=true");
-			Files.writeString(eulaTxt, eula);
+			Files.write(eulaTxt, eula.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 		}
 
 		// start server and immediately stop, the spawn point + spawnChunkRadius set in level.dat

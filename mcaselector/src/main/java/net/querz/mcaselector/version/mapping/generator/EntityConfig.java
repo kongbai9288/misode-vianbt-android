@@ -46,7 +46,7 @@ public class EntityConfig {
 
 	public void save(Path path) throws IOException {
 		String json = GSON.toJson(entities);
-		Files.writeString(path, json);
+		Files.write(path, json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 	}
 
 	public void merge(EntityConfig other) {

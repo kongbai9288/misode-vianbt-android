@@ -52,7 +52,7 @@ public class StructureConfig {
 
 	public void save(Path path) throws IOException {
 		String json = GSON.toJson(structures);
-		Files.writeString(path, json);
+		Files.write(path, json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 	}
 
 	public void merge(StructureConfig other) {
