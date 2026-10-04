@@ -570,7 +570,7 @@ public class Selection implements Serializable, Iterable<Long2ObjectMap.Entry<Ch
 				a.clear(l);
 			}
 		});
-		b.forEach(l -> {
+		b.forEach((net.querz.mcaselector.util.collection.IntConsumer) l -> {
 			if (!a.get(l)) {
 				a.clear(l);
 			}

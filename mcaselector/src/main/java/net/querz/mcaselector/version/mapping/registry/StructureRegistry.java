@@ -63,7 +63,7 @@ public final class StructureRegistry {
 				alts.put(e.name(), set);
 			}
 		} catch (IOException | RuntimeException e) {
-			throw new ParseException("failed to load structure registry", e);
+			throw new ParseException("failed to load structure registry: " + e.getMessage());
 		}
 	}
 

@@ -65,7 +65,9 @@ public class ColorConfig {
 
 	public void save(Path path) throws IOException {
 		String json = GSON.toJson(this);
-		Files.writeString(path, json);
+		// Files.writeString is Java 11+; write the bytes directly instead so the
+		// code also runs on older Android runtimes.
+		Files.write(path, json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 	}
 
 	public BlockColor getColor(String name, String biome, CompoundTag tag) {

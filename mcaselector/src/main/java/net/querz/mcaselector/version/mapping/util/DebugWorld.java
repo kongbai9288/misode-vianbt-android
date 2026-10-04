@@ -42,7 +42,7 @@ public final class DebugWorld {
 
 		// get dataversion for this minecraft version from server.jar
 		int dataVersion;
-		try (FileSystem fs = FileSystems.newFileSystem(serverJar)) {
+		try (FileSystem fs = FileSystems.newFileSystem(serverJar, (ClassLoader) null)) {
 			Path serverVersionJson = fs.getPath("version.json");
 			ServerVersion serverVersion = ServerVersion.load(serverVersionJson);
 			dataVersion = serverVersion.worldVersion();

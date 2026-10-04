@@ -4,6 +4,10 @@ import java.io.IOException;
 
 public class ParseException extends IOException {
 
+	public ParseException(String msg, Throwable cause) {
+		super(msg, cause);
+	}
+
 	public ParseException(String msg) {
 		super(msg);
 	}
