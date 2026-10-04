@@ -78,7 +78,7 @@ public final class DebugWorld {
 		// start server once to generate eula.txt and server.properties if they don't exist yet, and set their values to what we need
 		Path eulaTxt = path.resolve("eula.txt");
 		String eula = null;
-		if (!Files.exists(eulaTxt) || (eula = Files.readString(eulaTxt)).contains("eula=false")) {
+		if (!Files.exists(eulaTxt) || (eula = new String(java.nio.file.Files.readAllBytes(eulaTxt), java.nio.charset.StandardCharsets.UTF_8)).contains("eula=false")) {
 			Command.exec(path, "java", "-jar", "server.jar", "--nogui");
 			Path serverProperties = path.resolve("server.properties");
 			Properties properties = new Properties();
@@ -86,7 +86,7 @@ public final class DebugWorld {
 			properties.setProperty("level-type", "minecraft:debug");
 			properties.store(Files.newOutputStream(serverProperties), "Minecraft server properties");
 			if (eula == null) {
-				eula = Files.readString(eulaTxt);
+				eula = new String(java.nio.file.Files.readAllBytes(eulaTxt), java.nio.charset.StandardCharsets.UTF_8);
 			}
 			eula = eula.replace("eula=false", "eula=true");
 			Files.write(eulaTxt, eula.getBytes(java.nio.charset.StandardCharsets.UTF_8));

@@ -42,7 +42,7 @@ public final class StructureRegistry {
 		load("mapping/registry/structures.json");
 	}
 
-	private static void load(String resource) {
+	private static void load(String resource) throws java.io.IOException {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(
 			StructureRegistry.class.getClassLoader().getResourceAsStream(resource), StandardCharsets.UTF_8))) {
 			if (reader == null) {
